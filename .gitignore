@@ -1,0 +1,49 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Caches
+.claude/
+cache/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Virtual Environments
+venv/
+env/
+ml_env/
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# LaTeX build/auxiliary files (global, so trailing-space folders match too)
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.synctex.gz
+*.blg
+*.bbl
+*.fdb_latexmk
+*.fls
+*.run.xml
+
+# Cached OSM graphs (large, regenerable)
+*.graphml
+*.graphml.gz
+
+# Course lecture slides (copyrighted; do not redistribute)
+AI S0*.pdf
+
+# Execution outputs
+results/
+output/
+Lab3/cctv/results/
+Lab3/cctv/output/
+Lab\ 4/results/
+Lab\ 4/output/

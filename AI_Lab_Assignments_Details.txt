@@ -1,0 +1,308 @@
+================================================================================
+ AI LAB — ASSIGNMENTS OVERVIEW (Idea + Plan + Code)
+ Course: Artificial Intelligence  |  CSEDU
+================================================================================
+
+COMMON THREAD
+-------------
+All three assignments are built on the SAME real-world substrate:
+Dhaka's road network downloaded from OpenStreetMap (OSM) via the `osmnx`
+library and cached locally (cache/dhaka_all.graphml — 119,126 intersections,
+292,163 road segments).
+
+Each lab attacks a DIFFERENT classic AI paradigm on this same map, so the
+three together form a progression:
+
+    Lab 1  ->  SEARCH            (find the best PATH)
+    Lab 2  ->  CONSTRAINT SATISFACTION (find a valid ASSIGNMENT)
+    Lab 3  ->  POPULATION-BASED OPTIMIZATION (find the best PLACEMENT)
+
+Shared tech stack: Python, osmnx, networkx, matplotlib, pandas, numpy, scipy.
+
+
+================================================================================
+ LAB 1 — SEARCH ALGORITHMS ON DHAKA ROADS
+ Folder: Lab/  (analysis.py, cost_engine.py, data_loader.py, main.py,
+                scenarios.py, search_algorithms.py)
+================================================================================
+
+IDEA
+----
+Given two points in Dhaka, find the best route between them — and compare how
+different classic search algorithms behave (optimality, nodes expanded, speed).
+Instead of plain distance, edge cost comes from a configurable "scenario"
+(e.g. traffic jam, road size), so the search reflects realistic driving cost.
+
+PLAN
+----
+1. Load the Dhaka OSM graph (data_loader.py).
+2. Define a Scenario cost model (cost_engine.py) that assigns each road edge a
+   cost (distance modulated by jam / road-type factors) + build heuristic caches.
+3. Implement the textbook search family (search_algorithms.py):
+      - Uninformed : BFS, DFS, IDDFS, UCS (Uniform Cost Search)
+      - Informed   : Greedy Best-First, A*, Weighted A*
+   Each returns a SearchResult (path, total_cost, nodes expanded/popped, time).
+4. Run them on the same start/goal and COMPARE (analysis.py -> tables, CSV, plots).
+5. Interactive CLI (main.py) + batch benchmarks (scenarios.py).
+
+CODE — file by file
+-------------------
+- data_loader.py    : downloads/caches Dhaka OSM graph.
+- cost_engine.py    : Scenario dataclass; per-edge cost; admissible + practical
+                      (Euclidean) heuristic caches for informed search.
+- search_algorithms.py :
+      SearchResult (dataclass), helpers (_neighbors, _reconstruct,
+      _path_distance, _path_scenario_cost),
+      bfs, dfs, iddfs, ucs, greedy_best_first, astar, weighted_astar.
+- analysis.py       : print_results_table, save_results_csv, plot_metrics.
+- main.py           : interactive run — pick start/goal + scenario, choose
+                      algorithms, see route + metrics.
+- scenarios.py      : automated benchmark runs for the report.
+
+KEY AI CONCEPTS DEMONSTRATED
+----------------------------
+Uninformed vs informed search; admissibility of heuristics; optimality
+guarantees (UCS / A* optimal, Greedy not); the cost-vs-expansion trade-off;
+Weighted A* (faster, bounded-suboptimal).
+
+
+================================================================================
+ LAB 2 — CONSTRAINT SATISFACTION: GAS ALLOCATION IN DHAKA
+ Folder: Lab/Lab2/  (see Lab2/README.md for full detail)
+================================================================================
+
+IDEA
+----
+During a fuel crisis, decide WHICH user (car / bus / ambulance) goes to WHICH
+gas station so that every rationing rule is satisfied and total cost (travel
+distance + station load imbalance) is minimised. This is a classic CSP.
+
+PLAN
+----
+1. Load Dhaka OSM graph; place real gas stations (OSM amenity=fuel) + synthetic
+   users on it (gas_world.py) — precompute per-vehicle-class distances with
+   reverse Dijkstra.
+2. Formulate the CSP (csp_model.py):
+      Variables = users, Domains = reachable/eligible stations,
+      Constraints = 9 rules (unary / binary / global).
+3. Solve two ways:
+      - Backtracking + heuristics (MRV, Degree, LCV) + Forward Checking
+      - Min-Conflicts local search (random restart)
+4. Visualise assignments + compare solvers (visualize.py, experiments.py).
+
+CODE — file by file
+-------------------
+- data_loader.py   : Dhaka OSM graph (cached).
+- gas_world.py     : places stations + users; reverse-Dijkstra distance tables.
+- csp_model.py     : domains, constraints, AC-3 arc consistency, violation count.
+- backtracking.py  : systematic search (MRV + Degree + LCV + Forward Checking).
+- min_conflicts.py : local search from a random complete assignment.
+- visualize.py     : assignment maps, station loads, convergence, comparisons.
+- csp_main.py      : interactive CLI.
+- experiments.py   : batch runs A/B/C/demo for the report.
+
+CONSTRAINTS (9)
+---------------
+U1 Reachability, U2 Emergency-only stations, G1 Plate-parity rationing,
+G3 Public-transport reserve, G4 Strategic reserve, G6 Peak-hour CNG closure,
+G8 Queue cap, G9 Minimum service quota, B1 Household (AC-3).
+Soft objective: total_cost = w_dist * travel + w_load * variance(loads).
+
+KEY AI CONCEPTS DEMONSTRATED
+----------------------------
+CSP formulation; unary/binary/global constraints; arc consistency (AC-3);
+backtracking with MRV/Degree/LCV; forward checking; local search
+(Min-Conflicts); complete vs incomplete solvers; scaling behaviour.
+
+
+================================================================================
+ LAB 3 — POPULATION-BASED OPTIMIZATION
+ Folder: Lab/Lab3/
+================================================================================
+
+Lab 3 has TWO parts: (A) a literature survey, and (B) a fresh implemented
+problem solved with population-based / swarm algorithms.
+
+--------------------------------------------------------------------------------
+ PART A — LITERATURE REVIEW
+--------------------------------------------------------------------------------
+Files:
+  - Population based approach.pdf        (course slides: GA, ACO, PSO, Swarm)
+  - Literature_Review_Population_Based_Algorithms.docx  (formal review, ~55 refs)
+  - population_based_algorithms_reading_list.md  (55 works w/ 4-5 line summaries)
+
+Content: the standard 4-category taxonomy of nature-inspired metaheuristics —
+  Evolution-based (GA, DE), Swarm (ACO, PSO, ABC, Firefly, Cuckoo, GWO, WOA),
+  Physics-based (SA, GSA), Human-based (TLBO, HS) — plus origin papers,
+  benchmark problems, out-of-the-box applications, and a research gap:
+  "apply a swarm algorithm to a fresh problem outside TSP/knapsack."
+
+--------------------------------------------------------------------------------
+ PART B — NEW PROBLEM: CCTV COVERAGE OPTIMIZATION ON DHAKA ROADS
+ Folder: Lab/Lab3/cctv/
+--------------------------------------------------------------------------------
+
+IDEA
+----
+Place a FIXED number of CCTV cameras (K) at road intersections in a Dhaka
+neighbourhood so that they watch the MOST IMPORTANT roads, junctions and
+crowded spots. Each camera is directional (a cone: range R + field-of-view),
+and we optimise BOTH where each camera sits AND which way it faces.
+
+This is a Maximal Covering Location Problem (MCLP) — NP-hard — and is NOT TSP
+or knapsack, so it directly fills the literature review's research gap.
+
+WHY A SWARM/POPULATION ALGORITHM (justification)
+------------------------------------------------
+  1. Combinatorial explosion: choosing 15 of ~300 candidate sites = C(300,15)
+     ~ 10^25 options -> brute force impossible.
+  2. Adding continuous facing-angle theta makes the space mixed & effectively
+     infinite -> exact solvers/ILP struggle.
+  3. Directional cones + overlap + importance make the objective non-linear /
+     non-submodular -> greedy's guarantee weakens.
+  4. Coverage is computed by simulation (no gradient) -> gradient methods fail;
+     population methods only need fitness values.
+
+OPTIMIZATION FORMULATION
+------------------------
+  FIXED (input)   : K (num cameras), camera mix (e.g. 5x 90deg + 10x 120deg),
+                    each camera's range R and FOV, study area, demand weights.
+  DECISION vars   : for each camera -> (which intersection, facing angle theta).
+  OBJECTIVE       : maximise SUM of weights of covered demand points.
+  CONSTRAINTS     : exactly K cameras; one camera per node; cameras only at
+                    intersections.
+  Chromosome/particle : [ (node_1, theta_1), ..., (node_K, theta_K) ].
+
+DEMAND & WEIGHTS (what "coverage" means)
+----------------------------------------
+Demand = many weighted points:
+  - road sample points every ~25 m, weight = road_importance * length
+      (primary=3, secondary=2, tertiary=1.5, residential=1, service=0.5)
+  - intersections, weight = 40 * street_count (junctions matter more)
+  - any point near an OSM POI (school/market/hospital/bus/...) x2.5 (hotspot)
+  - SYNTHETIC CRIME / CROWD LAYER (SPaFE / CrowdSPaFE-inspired): real crime data
+    is scarce, so a synthetic risk field is generated -- 8 Gaussian "risk"
+    clusters, half placed on real POIs (crowded = riskier) and half at random
+    spots, deterministic per seed. Final weight *= (1 + crime_score/scale), so
+    cameras are pulled toward high-risk / high-crowd areas.
+A point is COVERED if it lies inside some camera's cone:
+      distance <= R  AND  |angle - theta| <= FOV/2.
+Coverage% = covered weight / total weight. (Not raw area; importance-weighted.)
+Distance is EUCLIDEAN in metres (a camera sees in a straight line) -- unlike
+Lab 2 which used road-network distance because cars drive along roads.
+
+ALGORITHMS (four, compared)
+---------------------------
+  greedy : baseline. K times, add the (node, direction) giving the most NEW
+           weighted coverage. Fast, ~63% guarantee, but myopic.
+  GA     : population of camera-sets; tournament selection; uniform crossover;
+           mutation (move a camera / rotate theta); elitism; node-repair.
+  PSO    : each particle = continuous vector (x,y,theta per camera); velocity
+           update v = w*v + c1*r1*(pbest-x) + c2*r2*(gbest-x); (x,y) snapped to
+           nearest intersection. Continuous facing-angle handled naturally.
+  ACO    : camera placement recast as SUBSET SELECTION -- ants walk candidate
+           intersections and pick K of them (+ a discrete facing angle from
+           0/45/.../315 deg), guided by pheromone (tau) + a coverage heuristic
+           (eta). Pheromone evaporates each round (rho) and is deposited on the
+           best-so-far solution (elitist). Mirrors CrowdSPaFE's evaporation-ACO.
+  Note: GA, PSO & ACO are WARM-STARTED from the greedy solution (memetic), so
+        they refine a strong region rather than search from scratch.
+
+SMART TERMINATION (early stopping)
+----------------------------------
+Instead of a hard-coded iteration count, GA/PSO/ACO use a HYBRID rule:
+  - a max-iteration cap (e.g. 200), AND
+  - PATIENCE: if the best coverage does not improve for `patience` (e.g. 20)
+    consecutive iterations, convergence is assumed and the loop stops early.
+Each result reports how many iterations it actually ran (iters_run).
+
+CODE — file by file (Lab/Lab3/cctv/)
+------------------------------------
+- data_loader.py  : loads the cached Dhaka OSM graph (re-uses Lab2 cache).
+- cctv_world.py   : crops a study area; builds weighted demand points
+                    (roads + intersections + POI hotspots); selects candidate
+                    intersections; precomputes each candidate's coverage
+                    neighbourhood (KDTree). Provides cone coverage + fitness.
+- solvers.py      : greedy(), ga(), pso(), aco() + evaluate(); early stopping;
+                    returns coverage%, runtime, convergence history, iters_run.
+- visualize.py    : coverage map (roads, covered/uncovered points, camera FOV
+                    wedges coloured & numbered by type, scale bar),
+                    convergence curve, solver-comparison bars, and a CRIME
+                    HEATMAP (risk field + cameras -> shows cameras chase risk).
+- main.py         : interactive CLI (area, K, camera mix, ranges, hotspot,
+                    crime, solver, seed) -> runs -> writes maps to output/.
+- experiments.py  : parameter/hyperparameter SWEEPS -> results/sweep.tsv
+                    (9 suites: baseline, generations, population, budget,
+                    range, area, seed, hotspot, crime).
+
+HOW TO RUN
+----------
+  cd Lab/Lab3/cctv
+  ../../ml_env/bin/python main.py            # interactive (asks each input)
+  ../../ml_env/bin/python main.py --auto     # defaults, straight to map
+  ../../ml_env/bin/python main.py --auto --area gulshan --n90 8 --n120 12
+  ../../ml_env/bin/python experiments.py     # full sweep -> results/sweep.tsv
+Outputs: output/<run>/map_greedy.png, map_ga.png, map_pso.png, convergence.png,
+         comparison.png   +   results/sweep.tsv
+
+INPUT PARAMETERS (CLI)
+----------------------
+  area, radius(m), n90, n120 (=> K), r90, r120 (camera ranges), hotspot(0/1),
+  solver(greedy/ga/pso/all), seed.
+HYPERPARAMETERS (defaults)
+  GA : pop=40, generations=80, mutation=0.2, crossover=0.85, tournament=3,
+       elitism=2.
+  PSO: swarm=30, iterations=80, w=0.7, c1=1.5, c2=1.5.
+
+RESULTS SNAPSHOT (Dhanmondi, K=15, from results/sweep.tsv)
+---------------------------------------------------------
+  baseline   : greedy 21.9%  |  GA 22.0%  |  PSO 22.1%   (PSO >= GA >= greedy)
+  budget K   : 5 -> 8.6% ,  15 -> 22% ,  30 -> 37%       (biggest lever)
+  range x1.3 : 22% -> 28%                                 (2nd biggest lever)
+  generations: plateaus after ~100                        (convergence study)
+  seed       : 21.9-22.1% spread                          (stable / reliable)
+  area       : gulshan 28% (easy) ... mirpur 19.6% (dense/hard)
+  hotspot off: 17.8%  vs  on: 22%                         (objective matters)
+
+OVERLAP PENALTY (making the objective non-submodular)
+-----------------------------------------------------
+Objective = covered_weight  -  lambda * overlap_weight
+  overlap_weight = sum over points of weight * (times_seen - 1).
+With lambda=0 this is plain (submodular) coverage; with lambda>0, cameras that
+watch the SAME area are punished, so the objective becomes non-submodular and
+greedy's guarantee no longer holds. Greedy uses an objective-DELTA rule so it
+still avoids overlap reasonably, but its facing angle is discretised (16 dirs).
+
+HONEST FINDING (good for the report's discussion)
+-------------------------------------------------
+- For PURE coverage the greedy baseline is already very strong; with warm-start,
+  GA/PSO/ACO MATCH it and never do worse (cold-start metaheuristics do worse,
+  which proves greedy is a strong seed and the memetic warm-start matters).
+- In a DENSE scenario with an overlap penalty (small area, many long-range
+  cameras), PSO CONSISTENTLY BEATS greedy at every lambda, e.g.:
+       lambda=0.0 : greedy 98.01% vs PSO 98.56%  (overlap 29% -> 27%)
+       lambda=2.0 : greedy 93.04% vs PSO 94.06%  (overlap  1.3% -> 0.9%)
+  because PSO optimises the CONTINUOUS facing-angle that greedy only samples in
+  16 discrete steps. GA and ACO (discrete moves) match greedy.
+- Takeaway: the metaheuristic advantage here is PSO's continuous-angle search,
+  and it shows up precisely when the objective is non-submodular. This
+  demonstrates understanding of WHEN a metaheuristic helps -- not blind use.
+
+POSSIBLE EXTENSIONS (Future Work)
+---------------------------------
+  - Overlap/redundancy penalty (makes objective non-submodular).
+  - Line-of-sight / occlusion using OSM building polygons.
+  - Plate-capture alignment bonus (camera facing along the road).
+  - Distance decay (partial coverage), min blind-spot range.
+  - Add ACO and other swarm variants (ABC, GWO) for a wider comparison.
+
+KEY AI CONCEPTS DEMONSTRATED
+----------------------------
+Population-based optimization; chromosome/particle representation; fitness-
+function design; selection/crossover/mutation; PSO velocity update; greedy vs
+metaheuristic; warm-start/memetic hybrid; hyperparameter & convergence study;
+NP-hard covering (MCLP); honest justification of algorithm choice.
+
+================================================================================
+ END
+================================================================================
