@@ -34,9 +34,9 @@ baseline. Stochastic multi-stop delivery, posed as a Markov
 decision process, prices the compute premium a model-free learner
 pays for lacking a model. Throughout, the appropriate algorithm is
 dictated by problem structure, and every simulated parameter is a
-stated design choice rather than a fitted measurement. All source
-code and the \LaTeX{} report are publicly available at
-\url{https://github.com/USERNAME/dhaka-ai-paradigms}.
+stated design choice rather than a fitted measurement. Code and data are
+\href{https://github.com/Ardent-ashes/dhaka-ai-paradigms}{publicly
+available}.
 \end{abstract}
 
 \keywords{Artificial Intelligence; heuristic search; constraint satisfaction; swarm optimization; reinforcement learning; Markov decision process; OpenStreetMap}
@@ -130,7 +130,7 @@ Although constraint satisfaction and optimization solvers are well-studied on sy
 Population-based metaheuristics maintain a population of candidate solutions and evolve them toward high fitness. In the literature, these nature-inspired optimization algorithms are generally grouped into four main taxonomic families based on their source of inspiration:
 \begin{enumerate}
     \item \emph{Evolution-Based Algorithms:} These draw on natural selection, reproduction, and genetic recombination. The Genetic Algorithm (GA) applies selection, crossover, and mutation to a population of chromosomes~\citep{holland1975adaptation,goldberg1989genetic,katoch2021review}. Differential Evolution (DE) operates over continuous spaces by adding scaled difference vectors between random population members to a third member~\citep{storn1997de}.
-    \item \emph{Swarm-Intelligence-Based Algorithms:} These model the collective, decentralized behavior of social organisms and animal groups. Ant Colony Optimization (ACO) constructs path-based solutions using pheromone trails reinforced by quality and diminished by evaporation~\citep{dorigo1996antsystem,dorigo1997acs}. Particle Swarm Optimization (PSO) moves candidate particles through a continuous space under attraction to personal best and global best positions~\citep{kennedy1995pso,shi1998modified,clerc2002particle}. Other swarm methods include the Artificial Bee Colony (ABC) algorithm inspired by honeybee foraging~\citep{karaboga2005abc}, the Firefly Algorithm (FA) based on flash attractiveness~\citep{yang2009firefly}, Cuckoo Search (CS) using L\'{e}vy flights~\citep{yang2009cuckoo}, the Grey Wolf Optimizer (GWO) modeling social hunting hierarchy~\citep{mirjalili2014greywolf}, and the Whale Optimization Algorithm (WOA) modeling bubble-net hunting behavior~\citep{mirjalili2016whale}.
+    \item \emph{Swarm-Intelligence-Based Algorithms:} These model the collective, decentralized behavior of social organisms and animal groups. Ant Colony Optimization (ACO) constructs path-based solutions using pheromone trails reinforced by quality and diminished by evaporation~\citep{dorigo1996antsystem,dorigo1997acs}, and scales to real-world vehicle-routing operations~\citep{rizzoli2007aco}. Particle Swarm Optimization (PSO) moves candidate particles through a continuous space under attraction to personal best and global best positions~\citep{kennedy1995pso,shi1998modified,clerc2002particle}. Other swarm methods include the Artificial Bee Colony (ABC) algorithm inspired by honeybee foraging~\citep{karaboga2005abc}, the Firefly Algorithm (FA) based on flash attractiveness~\citep{yang2009firefly}, Cuckoo Search (CS) using L\'{e}vy flights~\citep{yang2009cuckoo}, the Grey Wolf Optimizer (GWO) modeling social hunting hierarchy~\citep{mirjalili2014greywolf}, and the Whale Optimization Algorithm (WOA) modeling bubble-net hunting behavior~\citep{mirjalili2016whale}.
     \item \emph{Physics-Based Algorithms:} These model thermodynamic or gravitational processes. Simulated Annealing (SA) draws an analogy with metallurgical cooling to escape local optima by accepting worse states with a decreasing probability~\citep{kirkpatrick1983sa}. The Gravitational Search Algorithm (GSA) models Newton's laws of gravity and motion, where candidate solutions attract each other proportionally to their masses~\citep{rashedi2009gsa}.
     \item \emph{Human-Behaviour-Based Algorithms:} These model human social, cognitive, or learning activities. Teaching-Learning-Based Optimization (TLBO) models teacher-student interactions in a classroom without requiring algorithm-specific control parameter tuning~\citep{rao2011tlbo}. Harmony Search (HS) models the improvisation process musicians use to find a pleasing harmony~\citep{geem2001harmony}.
 \end{enumerate}
@@ -1230,12 +1230,10 @@ Controlled sweeps vary one factor at a time while holding the graph, fleet, and 
     >=Latex]
     \node (g) {OSM\\neighbourhood};
     \node (d) [right=of g] {Weighted demand\\(+ crime field)};
-    \node (gr) [right=of d] {Greedy\\seed};
-    \node (op) [right=of gr] {Optimizers\\(GA/PSO/ACO)};
+    \node (op) [right=of d] {Optimizers\\(GA/PSO/ACO)};
     \node (o) [right=of op] {Layout\\+ coverage};
     \draw[->,thick] (g) -- (d);
-    \draw[->,thick] (d) -- (gr);
-    \draw[->,thick] (gr) -- (op);
+    \draw[->,thick] (d) -- (op);
     \draw[->,thick] (op) -- (o);
   \end{tikzpicture}
   \caption{Workflow: a weighted, crime-aware demand field defines the coverage objective; a greedy layout seeds the metaheuristics, which refine node placement and facing angles.}
@@ -1270,7 +1268,7 @@ The chosen cameras concentrate on the high-risk red zones of the crime field (\C
 \mbox{}\\
  We now generalize from this single instance to controlled multi-scenario sweeps covering three regimes: the submodular baseline, the non-submodular penalty regime, and crime steering with neighbourhood transfer.
 
-For plain coverage ($\lambda=0$, $K=15$) all three optimizers tie the greedy baseline at $\approx25.3\%$ weighted coverage (\Cref{tab:a3baseline}). This is expected: coverage is submodular, and greedy enjoys the classic $(1-1/e)\approx63\%$ optimality guarantee, so the warm-started metaheuristics can only match it. A metaheuristic is \emph{not} automatically better an honest and important baseline.
+For plain coverage ($\lambda=0$, $K=15$) all three optimizers tie the greedy baseline at $\approx25.3\%$ weighted coverage (\Cref{tab:a3baseline}). This is expected: coverage is submodular, and greedy enjoys the classic optimality guarantee, so the warm-started metaheuristics can only match it. A metaheuristic is \emph{not} automatically better an honest and important baseline.
 
 \begin{table}[H]
 \centering
